@@ -74,8 +74,11 @@ function submitEntry() {
     testSubject: document.getElementById('subject').value,
     testSubjectOther: document.getElementById('subjectOther').value
   };
-  fetch(API_URL, {
-    method: 'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(data)
+   fetch(API_URL, {
+    method: 'POST',
+    // JSON ではなく text/plain にしてプリフライトを防ぐ
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(data)
   })
   .then(res=>res.json())
   .then(json=>{ if(json.success) alert('保存しました'); state='dashboard'; render(); loadAndSum(); })
