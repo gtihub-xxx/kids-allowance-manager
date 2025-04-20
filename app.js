@@ -1,5 +1,6 @@
-// Apps Script Web アプリ URL を設定
-const API_URL = 'https://script.google.com/macros/s/AKfycbyHdZdMHbTD9155j0wt0yjTPJ46vDNKHN_uZ1N7WsPGc38Z2mbfXBE5-oHnKwys0KkkJA/exec';
++ // Google Sheets GViz JSON API URL を設定
++ const API_URL =
++   'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxBWiVtbk4C5R73-lcqv2hvT/gviz/tq?gid=0&tqx=out:json';
 
 let state = 'dashboard';
 
@@ -101,40 +102,28 @@ function submitEntry() {
 }
 
 // 集計読み込み
- function loadAndSum() {
--  // TODO: シートから当月データを取得し、sumA, sumB に反映
--  document.getElementById('sumA').textContent = '...';
--  document.getElementById('sumB').textContent = '...';
-+  // 公開したシートのGViz JSONエンドポイント
-+  const sheetJsonUrl =
-+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxB/gviz/tq?tqx=out:json';
-
-+  fetch(sheetJsonUrl)
-+    .then((res) => res.text())
-+    .then((txt) => {
-+      // GVizレスポンスから純粋なJSON部分を抽出
-+      const json = JSON.parse(txt.match(/\{[\s\S]*\}/)[0]);
-+      const rows = json.table.rows;
-+      const sums = { A: 0, B: 0 };
-+      const thisMonth = new Date().getMonth();
-
-+      rows.forEach((r) => {
-+        const date = new Date(r.c[0].v);
-+        if (date.getMonth() !== thisMonth) return;
-+        const child = r.c[1].v;
-+        const early   = r.c[2].v ? 10 : 0;
-+        const late    = r.c[3].v ? -10 : 0;
-+        const chore   = r.c[4].v ? 10 : 0;
-+        const perfect = r.c[6].v ? 100 : 0;
-+        sums[child] += early + late + chore + perfect;
-+      });
-
-+      // DOM へ反映
-+      document.getElementById('sumA').textContent = sums.A;
-+      document.getElementById('sumB').textContent = sums.B;
-+    })
-+    .catch((err) => {
-+      console.error('集計読み込みエラー', err);
-+    });
- }
+function loadAndSum() {
+  console.log('▶️ Fetching:', API_URL);
+  fetch(API_URL)
+    .then(res => res.text())
+    .then(txt => {
+      console.log('🛎 HTTP status & raw:', txt.slice(0,200) + '…');
+      const json = JSON.parse(txt.match(/\{[\s\S]*\}/)[0]);
+      const rows = json.table.rows;
+      const sums = { A: 0, B: 0 };
+      const thisMonth = new Date().getMonth();
+      rows.forEach(r => {
+        const date = new Date(r.c[0].v);
+        if (date.getMonth() !== thisMonth) return;
+        const child = r.c[1].v;
+        const early = r.c[2].v ? 10 : 0;
+        const late = r.c[3].v ? -10 : 0;
+        const chore = r.c[4].v ? 10 : 0;
+        const perfect = r.c[6].v ? 100 : 0;
+        sums[child] += early + late + chore + perfect;
+      });
+      document.getElementById('sumA').textContent = sums.A;
+      document.getElementById('sumB').textContent = sums.B;
+    })
+    .catch(err => console.error('集計読み込みエラー', err));
 }
