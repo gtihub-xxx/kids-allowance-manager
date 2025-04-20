@@ -1,7 +1,6 @@
-// Google Apps Script Web アプリ URL を設定
-// doGet() で GET リクエストに対して JSON (CORS 許可済) を返すよう実装しています
+// Google Apps Script Web アプリ URL を設定（POST/GET両対応）
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbYHdZdMHbTD9155j0wt0vjTPJ46vDNKHN_uZ1N7WsPGc3BZ2mbfXBE5-oHnKwys0KkkJA/exec';
+  'https://script.google.com/macros/s/AKfycbwHQNBsK4n2SAoUxvJ2vAkOPc6hNYa9TSMlcZJUXcnOO9R3dAbRJEjWCo2VmJnQBqHg2Q/exec';
 
 let state = 'dashboard';
 
@@ -10,15 +9,12 @@ window.addEventListener('DOMContentLoaded', () => {
   loadAndSum();
 });
 
-// 画面描写切り替え
+// 画面描画切り替え
 function render() {
   const app = document.getElementById('app');
   app.innerHTML = '';
-  if (state === 'dashboard') {
-    renderDashboard(app);
-  } else if (state === 'entry') {
-    renderEntry(app);
-  }
+  if (state === 'dashboard') renderDashboard(app);
+  else if (state === 'entry') renderEntry(app);
 }
 
 // ダッシュボード画面
@@ -26,33 +22,28 @@ function renderDashboard(root) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <h2>今月の集計状況2</h2>
+    <h2>今月の集計状況5</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
   root.appendChild(card);
-
-  const btnEntry = document.createElement('button');
-  btnEntry.textContent = '入力画面へ';
-  btnEntry.onclick = () => { state = 'entry'; render(); };
-  root.appendChild(btnEntry);
+  const btn = document.createElement('button');
+  btn.textContent = '入力画面へ';
+  btn.onclick = () => { state='entry'; render(); };
+  root.appendChild(btn);
 }
 
 // 入力画面
 function renderEntry(root) {
-  const card = document.createElement('div');
-  card.className = 'card';
+  const card = document.createElement('div'); card.className='card';
   card.innerHTML = `
     <h2>毎日の入力</h2>
     <label><input type="radio" name="child" value="A" checked/> 子どもA</label>
     <label><input type="radio" name="child" value="B"/> 子どもB</label>
-
     <label><input type="checkbox" id="early"/> 早寝（+10円）</label>
     <label><input type="checkbox" id="late"/> 遅寝（-10円）</label>
-
     <label><input type="checkbox" id="chore"/> お手伝い（+10円）</label>
     <input type="text" id="choreDesc" placeholder="その他詳細"/>
-
     <label><input type="checkbox" id="perfect"/> テスト満点（+100円）</label>
     <select id="subject">
       <option value="">科目を選択</option>
@@ -65,17 +56,9 @@ function renderEntry(root) {
     <input type="text" id="subjectOther" placeholder="その他科目"/>
   `;
   root.appendChild(card);
-
-  const btnSave = document.createElement('button');
-  btnSave.textContent = '保存';
-  btnSave.onclick = submitEntry;
-  root.appendChild(btnSave);
-
-  const btnBack = document.createElement('button');
-  btnBack.textContent = 'ダッシュボードへ';
-  btnBack.className = 'outline';
-  btnBack.onclick = () => { state = 'dashboard'; loadAndSum(); render(); };
-  root.appendChild(btnBack);
+  const btnSave = document.createElement('button'); btnSave.textContent='保存'; btnSave.onclick=submitEntry;
+  const btnBack = document.createElement('button'); btnBack.textContent='ダッシュボードへ'; btnBack.className='outline'; btnBack.onclick=()=>{ state='dashboard'; render(); loadAndSum(); };
+  root.appendChild(btnSave); root.appendChild(btnBack);
 }
 
 // データ送信 (POST)
@@ -92,27 +75,35 @@ function submitEntry() {
     testSubjectOther: document.getElementById('subjectOther').value
   };
   fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    method: 'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(data)
   })
-  .then(res => res.json())
-  .then(json => {
-    if (json.success) alert('保存しました');
-    state = 'dashboard';
-    render();
-    loadAndSum();
-  })
-  .catch(err => console.error('保存エラー', err));
+  .then(res=>res.json())
+  .then(json=>{ if(json.success) alert('保存しました'); state='dashboard'; render(); loadAndSum(); })
+  .catch(err=>console.error('保存エラー',err));
 }
+
+// JSONP コールバック
+window.handleSheetData = function(response) {
+  const rows = response.table.rows;
+  const sums = { A:0, B:0 };
+  const thisMonth = new Date().getMonth();
+  rows.forEach(r=>{
+    const date = new Date(r.c[0].v);
+    if(date.getMonth()!==thisMonth) return;
+    const child = r.c[1].v;
+    sums[child] += (r.c[2].v?10:0) + (r.c[3].v?-10:0) + (r.c[4].v?10:0) + (r.c[6].v?100:0);
+  });
+  document.getElementById('sumA').textContent=sums.A;
+  document.getElementById('sumB').textContent=sums.B;
+  // クリーンアップ
+  const sc = document.getElementById('jsonpScript'); if(sc) sc.remove(); delete window.handleSheetData;
+};
 
 // 集計読み込み (JSONP)
 function loadAndSum() {
-  // Google Visualization JSONP callback
-    // JSONP 用の URL: "ウェブに公開" 時の公開ID (pubhtml) を使用
-  const sheetUrl =
+  const script = document.createElement('script');
+  script.id='jsonpScript';
+  script.src=
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxBWiVtbk4C5R73-lcqv2hvT/gviz/tq?gid=0&tqx=out:jsonp;responseHandler:handleSheetData';
-
-  // JSONP 用のスクリプトタグを追加
-  const script = document.createElement('script');(script);
+  document.body.appendChild(script);
 }
