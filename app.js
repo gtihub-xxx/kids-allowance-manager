@@ -1,7 +1,7 @@
 // Google Apps Script Web アプリ URL を設定
 // doGet() で GET リクエストに対して JSON (CORS 許可済) を返すよう実装しています
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbYHdZdMHbTD9155j0wt0vjTPJ46vDNKHN_uZ1N7WsPGc3BZ2mbfXBE5-oHnKwys0KkkJA/exec';
+  'https://script.google.com/macros/s/AKfycbwHQNBsK4n2SAoUxvJ2vAkOPc6hNYa9TSMlcZJUXcnOO9R3dAbRJEjWCo2VmJnQBqHg2Q/exec';
 
 let state = 'dashboard';
 
@@ -26,7 +26,7 @@ function renderDashboard(root) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <h2>今月の集計状況3</h2>
+    <h2>今月の集計状況5</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
