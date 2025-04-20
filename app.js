@@ -1,6 +1,6 @@
 // Google Sheets GViz JSON API URL を設定
 const API_URL =
-  'https://docs.google.com/spreadsheets/d/1wrK3-41WYLBVtvYFiI-Rlnub75IEovpJGazREuUC2iA/gviz/tq?gid=0&tqx=out:json';
+  'https://script.google.com/macros/s/AKfycbyHdZdMHbTD9155j0wt0yjTPJ46vDNKHN_uZ1N7WsPGc38Z2mbfXBE5-oHnKwys0KkkJA/exec';
 
 let state = 'dashboard';
 
