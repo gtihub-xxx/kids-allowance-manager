@@ -1,3 +1,4 @@
+// フロントエンド設定
 // Google Apps Script Web アプリ URL を設定（POST/GET両対応）
 const API_URL =
   'https://script.google.com/macros/s/AKfycbwHQNBsK4n2SAoUxvJ2vAkOPc6hNYa9TSMlcZJUXcnOO9R3dAbRJEjWCo2VmJnQBqHg2Q/exec';
@@ -22,20 +23,20 @@ function renderDashboard(root) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <h2>今月の集計状況5</h2>
+    <h2>今月の集計状況</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
   root.appendChild(card);
   const btn = document.createElement('button');
   btn.textContent = '入力画面へ';
-  btn.onclick = () => { state='entry'; render(); };
+  btn.onclick = () => { state = 'entry'; render(); };
   root.appendChild(btn);
 }
 
 // 入力画面
 function renderEntry(root) {
-  const card = document.createElement('div'); card.className='card';
+  const card = document.createElement('div'); card.className = 'card';
   card.innerHTML = `
     <h2>毎日の入力</h2>
     <label><input type="radio" name="child" value="A" checked/> 子どもA</label>
@@ -56,9 +57,15 @@ function renderEntry(root) {
     <input type="text" id="subjectOther" placeholder="その他科目"/>
   `;
   root.appendChild(card);
-  const btnSave = document.createElement('button'); btnSave.textContent='保存'; btnSave.onclick=submitEntry;
-  const btnBack = document.createElement('button'); btnBack.textContent='ダッシュボードへ'; btnBack.className='outline'; btnBack.onclick=()=>{ state='dashboard'; render(); loadAndSum(); };
-  root.appendChild(btnSave); root.appendChild(btnBack);
+  const btnSave = document.createElement('button');
+  btnSave.textContent = '保存';
+  btnSave.onclick = submitEntry;
+  const btnBack = document.createElement('button');
+  btnBack.textContent = 'ダッシュボードへ';
+  btnBack.className = 'outline';
+  btnBack.onclick = () => { state = 'dashboard'; render(); loadAndSum(); };
+  root.appendChild(btnSave);
+  root.appendChild(btnBack);
 }
 
 // データ送信 (POST)
@@ -74,39 +81,46 @@ function submitEntry() {
     testSubject: document.getElementById('subject').value,
     testSubjectOther: document.getElementById('subjectOther').value
   };
-   fetch(API_URL, {
+  fetch(API_URL, {
     method: 'POST',
-    // JSON ではなく text/plain にしてプリフライトを防ぐ
-    headers: { 'Content-Type': 'text/plain' },
+    headers: { 'Content-Type': 'text/plain' }, // プリフライトを防ぐ
     body: JSON.stringify(data)
   })
-  .then(res=>res.json())
-  .then(json=>{ if(json.success) alert('保存しました'); state='dashboard'; render(); loadAndSum(); })
-  .catch(err=>console.error('保存エラー',err));
+  .then(res => res.json())
+  .then(json => {
+    if (json.success) alert('保存しました');
+    state = 'dashboard';
+    render();
+    loadAndSum();
+  })
+  .catch(err => console.error('保存エラー', err));
 }
 
 // JSONP コールバック
 window.handleSheetData = function(response) {
   const rows = response.table.rows;
-  const sums = { A:0, B:0 };
+  const sums = { A: 0, B: 0 };
   const thisMonth = new Date().getMonth();
-  rows.forEach(r=>{
+  rows.forEach(r => {
     const date = new Date(r.c[0].v);
-    if(date.getMonth()!==thisMonth) return;
+    if (date.getMonth() !== thisMonth) return;
     const child = r.c[1].v;
-    sums[child] += (r.c[2].v?10:0) + (r.c[3].v?-10:0) + (r.c[4].v?10:0) + (r.c[6].v?100:0);
+    sums[child] += (r.c[2].v ? 10 : 0)
+               + (r.c[3].v ? -10 : 0)
+               + (r.c[4].v ? 10 : 0)
+               + (r.c[6].v ? 100 : 0);
   });
-  document.getElementById('sumA').textContent=sums.A;
-  document.getElementById('sumB').textContent=sums.B;
-  // クリーンアップ
-  const sc = document.getElementById('jsonpScript'); if(sc) sc.remove(); delete window.handleSheetData;
+  document.getElementById('sumA').textContent = sums.A;
+  document.getElementById('sumB').textContent = sums.B;
+  const sc = document.getElementById('jsonpScript'); if (sc) sc.remove();
+  delete window.handleSheetData;
 };
 
 // 集計読み込み (JSONP)
 function loadAndSum() {
   const script = document.createElement('script');
-  script.id='jsonpScript';
-  script.src=
+  script.id = 'jsonpScript';
+  script.src =
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxBWiVtbk4C5R73-lcqv2hvT/gviz/tq?gid=0&tqx=out:jsonp;responseHandler:handleSheetData';
   document.body.appendChild(script);
 }
