@@ -26,7 +26,7 @@ function renderDashboard(root) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <h2>今月の集計状況</h2>
+    <h2>今月の集計状況2</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
