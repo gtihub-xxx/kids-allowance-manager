@@ -109,35 +109,10 @@ function submitEntry() {
 // 集計読み込み (JSONP)
 function loadAndSum() {
   // Google Visualization JSONP callback
+    // JSONP 用の URL: "ウェブに公開" 時の公開ID (pubhtml) を使用
   const sheetUrl =
-    'https://docs.google.com/spreadsheets/d/1wrK3-41WYLBVtvYFiI-Rlnub75IEovpJGazREuUC2iA/gviz/tq?gid=0&tqx=responseHandler:handleSheetData';
-
-  // コールバック関数をグローバルに定義
-  window.handleSheetData = function(response) {
-    const rows = response.table.rows;
-    const sums = { A: 0, B: 0 };
-    const thisMonth = new Date().getMonth();
-    rows.forEach(r => {
-      const date = new Date(r.c[0].v);
-      if (date.getMonth() !== thisMonth) return;
-      const child = r.c[1].v;
-      const early = r.c[2].v ? 10 : 0;
-      const late = r.c[3].v ? -10 : 0;
-      const chore = r.c[4].v ? 10 : 0;
-      const perfect = r.c[6].v ? 100 : 0;
-      sums[child] += early + late + chore + perfect;
-    });
-    document.getElementById('sumA').textContent = sums.A;
-    document.getElementById('sumB').textContent = sums.B;
-    // スクリプトタグを削除してクリーンアップ
-    delete window.handleSheetData;
-    const script = document.getElementById('jsonpScript');
-    if (script) script.remove();
-  };
+    'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxBWiVtbk4C5R73-lcqv2hvT/gviz/tq?gid=0&tqx=out:jsonp;responseHandler:handleSheetData';
 
   // JSONP 用のスクリプトタグを追加
-  const script = document.createElement('script');
-  script.id = 'jsonpScript';
-  script.src = sheetUrl;
-  document.body.appendChild(script);
+  const script = document.createElement('script');(script);
 }
