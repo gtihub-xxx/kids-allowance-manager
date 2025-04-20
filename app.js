@@ -1,6 +1,6 @@
 // Google Sheets GViz JSON API URL を設定
 const API_URL =
-  'https://docs.google.com/spreadsheets/d/e/1wrK3-41WYLBVtvYFiI-Rlnub75IEovpJGazREuUC2iA/gviz/tq?gid=0&tqx=out:json';
+  'https://docs.google.com/spreadsheets/d/1wrK3-41WYLBVtvYFiI-Rlnub75IEovpJGazREuUC2iA/gviz/tq?gid=0&tqx=out:json';
 
 let state = 'dashboard';
 
@@ -24,8 +24,7 @@ function render() {
 function renderDashboard(root) {
   const card = document.createElement('div'); card.className = 'card';
   card.innerHTML = `
-    <h2>今月の集計状況</h2>
-    <h2>ver2</h2>
+    <h2>今月の集計状況2</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
