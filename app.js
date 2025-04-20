@@ -1,7 +1,7 @@
 // Google Apps Script Web アプリ URL を設定
 // doGet() で GET リクエストに対して JSON (CORS 許可済) を返すよう実装しています
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbwHQNBsK4n2SAoUxvJ2vAkOPc6hNYa9TSMlcZJUXcnOO9R3dAbRJEjWCo2VmJnQBqHg2Q/exec';
+  'https://script.google.com/macros/s/AKfycbYHdZdMHbTD9155j0wt0vjTPJ46vDNKHN_uZ1N7WsPGc3BZ2mbfXBE5-oHnKwys0KkkJA/exec';
 
 let state = 'dashboard';
 
@@ -26,7 +26,7 @@ function renderDashboard(root) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-    <h2>今月の集計状況5</h2>
+    <h2>今月の集計状況</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
@@ -106,25 +106,38 @@ function submitEntry() {
   .catch(err => console.error('保存エラー', err));
 }
 
-// 集計読み込み (GET)
+// 集計読み込み (JSONP)
 function loadAndSum() {
-  fetch(API_URL)
-    .then(res => res.json())
-    .then(rows => {
-      const sums = { A: 0, B: 0 };
-      const thisMonth = new Date().getMonth();
-      rows.forEach(row => {
-        const date = new Date(row['日付']);
-        if (date.getMonth() !== thisMonth) return;
-        const child = row['子ども'];
-        const early = row['早寝'] ? 10 : 0;
-        const late = row['遅寝'] ? -10 : 0;
-        const chore = row['お手伝い'] ? 10 : 0;
-        const perfect = row['満点'] ? 100 : 0;
-        sums[child] += early + late + chore + perfect;
-      });
-      document.getElementById('sumA').textContent = sums.A;
-      document.getElementById('sumB').textContent = sums.B;
-    })
-    .catch(err => console.error('集計読み込みエラー', err));
+  // Google Visualization JSONP callback
+  const sheetUrl =
+    'https://docs.google.com/spreadsheets/d/1wrK3-41WYLBVtvYFiI-Rlnub75IEovpJGazREuUC2iA/gviz/tq?gid=0&tqx=responseHandler:handleSheetData';
+
+  // コールバック関数をグローバルに定義
+  window.handleSheetData = function(response) {
+    const rows = response.table.rows;
+    const sums = { A: 0, B: 0 };
+    const thisMonth = new Date().getMonth();
+    rows.forEach(r => {
+      const date = new Date(r.c[0].v);
+      if (date.getMonth() !== thisMonth) return;
+      const child = r.c[1].v;
+      const early = r.c[2].v ? 10 : 0;
+      const late = r.c[3].v ? -10 : 0;
+      const chore = r.c[4].v ? 10 : 0;
+      const perfect = r.c[6].v ? 100 : 0;
+      sums[child] += early + late + chore + perfect;
+    });
+    document.getElementById('sumA').textContent = sums.A;
+    document.getElementById('sumB').textContent = sums.B;
+    // スクリプトタグを削除してクリーンアップ
+    delete window.handleSheetData;
+    const script = document.getElementById('jsonpScript');
+    if (script) script.remove();
+  };
+
+  // JSONP 用のスクリプトタグを追加
+  const script = document.createElement('script');
+  script.id = 'jsonpScript';
+  script.src = sheetUrl;
+  document.body.appendChild(script);
 }
