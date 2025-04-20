@@ -1,6 +1,6 @@
-+ // Google Sheets GViz JSON API URL を設定
-+ const API_URL =
-+   'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxBWiVtbk4C5R73-lcqv2hvT/gviz/tq?gid=0&tqx=out:json';
+// Google Sheets GViz JSON API URL を設定
+const API_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_SCwi7DK8HEY2JiKzmAtlO0FsJOMA3AidTjlJ_CcrgYGGISaolllVFxBWiVtbk4C5R73-lcqv2hvT/gviz/tq?gid=0&tqx=out:json';
 
 let state = 'dashboard';
 
@@ -25,6 +25,7 @@ function renderDashboard(root) {
   const card = document.createElement('div'); card.className = 'card';
   card.innerHTML = `
     <h2>今月の集計状況</h2>
+    <h2>ver2</h2>
     <p>子どもA: ¥<span id="sumA">0</span></p>
     <p>子どもB: ¥<span id="sumB">0</span></p>
   `;
@@ -98,7 +99,8 @@ function submitEntry() {
     state = 'dashboard';
     loadAndSum();
     render();
-  });
+  })
+  .catch(err => console.error('保存エラー', err));
 }
 
 // 集計読み込み
@@ -107,7 +109,7 @@ function loadAndSum() {
   fetch(API_URL)
     .then(res => res.text())
     .then(txt => {
-      console.log('🛎 HTTP status & raw:', txt.slice(0,200) + '…');
+      console.log('🛎 Raw:', txt.slice(0,200) + '…');
       const json = JSON.parse(txt.match(/\{[\s\S]*\}/)[0]);
       const rows = json.table.rows;
       const sums = { A: 0, B: 0 };
